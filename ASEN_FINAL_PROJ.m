@@ -35,6 +35,11 @@ xlabel('Real Part')
 ylabel('Imaginary Part')
 
 
+% Earth mean radius:
+rEarth_m = 6371E3;
+muEarth_m3ps2 = 398600*(1000^3);
+
+
 %% #2
 % Define control system objectives, requirements. Determine open loop plant
 % poles. Simulate the plant respone (no controller) to the desired initial
@@ -68,6 +73,14 @@ OLsys.InputUnit = {'meters/seconds^2';'meters/seconds^2';'meters/seconds^2'};
 % X0 = [0 0 10000 0 0 0];
 % X0 = [10 375 0 0 0.00009 0];
 X0 = [0 400 0 0 0.0235 0];
+% Target radius
+rTgt_m = 6778E3;
+% Target mean motion
+nTgt = sqrt(muEarth_m3ps2/rTgt_m^3);
+% Target orbit period
+TTgt_s = 2*pi/nTgt; 
+
+tvec_s = 0:0.1:2*TTgt_s;
 
 % figure();
 % initial(OLsys,X0,tvec_s);
