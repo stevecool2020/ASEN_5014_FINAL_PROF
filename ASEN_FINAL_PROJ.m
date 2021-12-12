@@ -61,7 +61,7 @@ OLsys.InputUnit = {'meters/seconds^2';'meters/seconds^2';'meters/seconds^2'};
 
 
 % define umax 
-thrust_kgmps2 = 25;
+thrust_kgmps2 = 10;
 massChaser_kg = 100; 
 
 % Open loop poles
@@ -78,7 +78,7 @@ massChaser_kg = 100;
 % X0 = [0 10000 0 0 0 0]; % in-track offset
 % X0 = [0 0 10000 0 0 0]; % cross-track offset
 % X0 = [10 375 0 0 0.00009 0];
-X0 = [100 5000 -1000 0 0 0]; % 500 meters in-track final approach
+X0 = [0 500 0 0 0 0]; % 500 meters in-track final approach
 % Target radius
 rTgt_m = 6778E3;
 % Target mean motion
@@ -233,8 +233,8 @@ awts = ones([1,numel(A(:,1))]);
 rho  = 10;
 awts = awts./sum(awts);
 
-poswts = [20 90 60];
-velwts = 1*[1 1 1];
+poswts = 1000*[2 9 6];
+velwts = 100*[1 1 1];
 Q = diag(awts./[poswts, velwts].^2);
 R = rho*diag(1./(umax_mps2.*[1 1 1]).^2);
 
