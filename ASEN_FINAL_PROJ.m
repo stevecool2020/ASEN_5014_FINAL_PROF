@@ -115,7 +115,6 @@ despoles = [-0.09 -0.06 -0.03 -0.02 -0.02 -0.01]./10; %dominant pole is real and
 K = place(A,B,despoles);
 
 % Define closed-loop dynamics
-F1 = eye(2); %unity feedforward gain on ref inputs 
 F2 = inv(C/(-A+B*K)*B);
 F = F2;
 Acl = A - B*K;
@@ -167,8 +166,8 @@ legend show
 
 %% #5 Luenberger Observer 
 % todo remove these gains once part 4 is complete
-K = zeros(3,6);
-F = eye(3);
+Kobs = zeros(3,6);
+Fobs = eye(3);
 
 % check for controllability of observer system
 Co_observer = ctrb(A', C');
@@ -197,6 +196,30 @@ title('Observer error transient responses | Zero Intial Error')
 figure('Name','Observer Error Transient With IC');
 initial(LOCLsys,2*ones(2*nstates,1),10) %initial observer error states non-zero
 title('Observer error transient responses | With Inital Error')
+
+
+
+%%Define observer error augmented closed-loop dynamics with integral states 
+%%(9 states total: 6 from original system + 6 from observer errors)
+A_CLO = [A-B*K B*K;
+           zeros(nstates) A-L*C];
+B_CLO = [B*F; zeros(size(B))];
+C_CLO = [C, zeros(3,6)]; 
+D_CLO = zeros(3,3);
+F_CLO = [zeros(size(B));
+        eye(3)]; % F using final value theorem
+CLaugsys3 = ss(A_CLO,B_CLO,C_CLO,D_CLO);
+
+
+X0LO = [X0, 0, 0, 0, 0, 0, 0];
+figure('Name','Closed Loop Response With 0 Observer IC');
+lsim(CLaugsys3,rhistvec,tvec_s,X0LO) %initial observer error states non-zero
+title('Closed Loop Response With 0 Observer ICs | Without Inital Obvserver Error')
+
+X0LO = [X0, 10, 10, 1000, 10, 10, 10];
+figure('Name','Closed Loop Response With 0 Observer IC');
+lsim(CLaugsys3,rhistvec,tvec_s,X0LO) %initial observer error states non-zero
+title('Closed Loop Response With 0 Observer ICs | Without Inital Obvserver Error')
 
 
 %% # 6 Infinite Horizon Controller
