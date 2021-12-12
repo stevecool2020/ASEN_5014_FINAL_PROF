@@ -233,7 +233,7 @@ awts = ones([1,numel(A(:,1))]);
 rho  = 10;
 awts = awts./sum(awts);
 
-poswts = 1000*[2 9 6];
+poswts = 500*[2 9 6];
 velwts = 100*[1 1 1];
 Q = diag(awts./[poswts, velwts].^2);
 R = rho*diag(1./(umax_mps2.*[1 1 1]).^2);
