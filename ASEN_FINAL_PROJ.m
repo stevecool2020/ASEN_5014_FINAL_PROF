@@ -93,22 +93,44 @@ tvec_s = 0:0.1:2*TTgt_s;
 [y,t,x] = initial(OLsys,X0,tvec_s); 
 step(OLsys,TTgt_s)
 
-figure('Name','Open Loop Response to Initial Conditions');
-subplot(311)
-plot(t,y(:,1),'DisplayName','Radial Obs');  hold on;
-plot(t,x(:,1),'DisplayName','Radial State'); 
-legend('show'); ylabel('meters'); grid minor;
-subplot(312)
-plot(t,y(:,2),'DisplayName','Along-Track Obsv'); hold on;
-plot(t,x(:,2),'DisplayName','Along-Track State'); 
-legend('show'); ylabel('meters'); grid minor;
-subplot(313)
-plot(t,y(:,3),'DisplayName','Cross-Track Obsv'); hold on;
-plot(t,y(:,3),'DisplayName','Cross-Track State');
-legend('show'); ylabel('meters'); grid minor;
-xlabel('Time (seconds)');
-sgtitle('Initial Conditions System Response')
+nRadialCond = 5;
+colorTrips = [zeros(nRadialCond,2),linspace(0.2,1,nRadialCond)'];
+InitialStatePhaseSpaceData = nan(numel(tvec_s), 6, nRadialCond);
 
+figInitPhaseSpace = figure();
+for i=1:nRadialCond
+   thisInitCond = X0 + [i 0 0 0 0 0];
+   [~,~,InitialStatePhaseSpaceData(:,:,i)] = initial(OLsys,thisInitCond,tvec_s);
+   subplot(311);
+   plot(t,InitialStatePhaseSpaceData(:,1,i),'LineWidth',3,'Color',colorTrips(i,:)); 
+   grid minor; hold on;
+   ylabel({'Distance';'Radial (m)'})
+   subplot(312);
+   plot(t,InitialStatePhaseSpaceData(:,2,i),'LineWidth',3,'Color',colorTrips(i,:)); 
+   grid minor; hold on;
+   ylabel({'Distance';'In-Track (m)'})
+   subplot(313);
+   plot(t,InitialStatePhaseSpaceData(:,3,i),'LineWidth',3,'Color',colorTrips(i,:)); 
+   grid minor; hold on;
+   ylabel({'Distance';'Cross-Track (m)'})
+end
+sgtitle('Initial Conditions Open Loop Response');
+
+% figure('Name','Open Loop Response to Initial Conditions');
+% subplot(311)
+% plot(t,y(:,1),'DisplayName','Radial Observed');  hold on;
+% plot(t,x(:,1),'DisplayName','Radial State'); 
+% legend('show'); ylabel('meters'); grid minor;
+% subplot(312)
+% plot(t,y(:,2),'DisplayName','Along-Track Observed'); hold on;
+% % plot(t,x(:,2),'DisplayName','Along-Track State'); 
+% legend('show'); ylabel('meters'); grid minor;
+% subplot(313)
+% plot(t,y(:,3),'DisplayName','Cross-Track Observed'); hold on;
+% % plot(t,y(:,3),'DisplayName','Cross-Track State');
+% legend('show'); ylabel('meters'); grid minor;
+% xlabel('Time (seconds)');
+% sgtitle('Initial Conditions System Response')
 
 %% #4 Manual Pole Placement
 
@@ -273,6 +295,20 @@ ylabel({'Distance';'Cross-track (m)'});
 xlabel('Time (s)')
 legend show
 
+% figure("Name","Response Compared To Desired Position State")
+% subplot(311)
+% plot(tvec_s,xcl1(:,4),'DisplayName','State'); hold on;
+% ylabel({'Velocity';'Radial (m/s)'});
+% legend show
+% subplot(312)
+% plot(tvec_s,xcl1(:,5),'DisplayName','State'); hold on;
+% ylabel({'Velocity';'In-track (m/s)'});
+% legend show
+% subplot(313)
+% plot(tvec_s,xcl1(:,6),'DisplayName','State'); hold on;
+% ylabel({'Velocity';'Cross-track (m/s)'}); 
+% xlabel('Time (s)')
+% legend show
 
 
 %%%% SCRIPT STUB %%%%
