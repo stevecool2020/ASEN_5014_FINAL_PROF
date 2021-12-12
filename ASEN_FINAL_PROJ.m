@@ -29,8 +29,8 @@ OLsys = ss(A,B,C,D);
 
 eigVal = eig(A);
 [eig_Vec, eig_ValDiag] = eig(A);
-figure
-plot(eigVal, 'o');
+figure('name', 'Pole-Zero Map');
+pzmap(OLsys); 
 xlabel('Real Part')
 ylabel('Imaginary Part')
 
@@ -46,8 +46,8 @@ muEarth_m3ps2 = 398600*(1000^3);
 % conditions, reference inputs and /or exogeneous disturbances, as
 % appropriate to control objectives, verify that thees responses make sense
 
-% isControllable = rank(ctrb(OLsys)) == numel(A(:,1)) % yes
-% isObservable = rank(obsv(OLsys)) == numel(A(:,1)) % yes
+isControllable = rank(ctrb(OLsys)) == numel(A(:,1)) % yes
+isObservable = rank(obsv(OLsys)) == numel(A(:,1)) % yes
 
 % Names for plots
 OLsys.StateName = {'x (radial)';'y (along-track)';'z (cross-track)';...
@@ -78,7 +78,7 @@ massChaser_kg = 100;
 % X0 = [0 10000 0 0 0 0]; % in-track offset
 % X0 = [0 0 10000 0 0 0]; % cross-track offset
 % X0 = [10 375 0 0 0.00009 0];
-X0 = [0 500 0 0 0 0]; % 500 meters in-track final approach
+X0 = [100 5000 -1000 0 0 0]; % 500 meters in-track final approach
 % Target radius
 rTgt_m = 6778E3;
 % Target mean motion
@@ -88,10 +88,7 @@ TTgt_s = 2*pi/nTgt;
 
 tvec_s = 0:0.1:2*TTgt_s;
 
-% figure();
-% initial(OLsys,X0,tvec_s);
 [y,t,x] = initial(OLsys,X0,tvec_s); 
-step(OLsys,TTgt_s)
 
 nRadialCond = 5;
 colorTrips = [zeros(nRadialCond,2),linspace(0.2,1,nRadialCond)'];
@@ -135,7 +132,7 @@ sgtitle('Initial Conditions Open Loop Response');
 %% #4 Manual Pole Placement
 
 % Specify desired closed-loop poles
-despoles = [-0.09 -0.06 -0.03 -0.02 -0.02 -0.01]; %dominant pole is real and at -2 
+despoles = [-0.09 -0.06 -0.03 -0.02 -0.02 -0.01]./10; %dominant pole is real and at -2 
 %% Use place command to get feedback gain:
 K = place(A,B,despoles);
 
@@ -152,16 +149,16 @@ CLsys = ss(Acl,Bcl,Ccl,Dcl);
 
 umax_mps2 = thrust_kgmps2/massChaser_kg;
 
-rhistvec =  x(:,1:3);
+rhistvec = zeros(3,numel(tvec_s))';
 
 % Check that closed-loop system specs met; change despoles otherwise
 %%get response to first reference input profile: 
-[Y_CL1,~,X_CL1] = lsim(CLsys,rhistvec,tvec_s);
+[Y_CL1,~,X_CL1] = lsim(CLsys,rhistvec,tvec_s, X0);
 
 %compute resulting actuator efforts in each case, where u = -Kx + Fr
 U_CL1 = -K*X_CL1' + F*rhistvec'; 
 
-figure("Name",'Manual Pole Placement Actuator Effort')
+figure('Name','Manual Pole Placement Actuator Effort')
 subplot(311), hold on
 plot(tvec_s,U_CL1(1,:))
 plot(tvec_s,umax_mps2*ones(size(tvec_s)),'--k');
@@ -175,7 +172,7 @@ plot(tvec_s,U_CL1(3,:))
 plot(tvec_s,umax_mps2*ones(size(tvec_s)),'--k');
 plot(tvec_s,-umax_mps2*ones(size(tvec_s)),'--k');
 
-figure("Name","Manual Pole Placement: Response Compared To Desired Position State")
+figure('Name','Manual Pole Placement: Response Compared To Desired Position State')
 subplot(311)
 plot(tvec_s,Y_CL1(:,1),'DisplayName','Observed'); hold on;
 plot(tvec_s,rhistvec(:,1),'DisplayName','Reference');
@@ -197,7 +194,7 @@ F = eye(3);
 
 % check for controllability of observer system
 Co_observer = ctrb(A', C');
-is_observer_controllable = rank(Co_observer) == nstates
+is_observer_controllable = rank(Co_observer) == nstates;
 
 % New augmented state for luenberger observer: Xaug_obs = [x; ex; ey; ez; exdot; eydot; ezdot]
 
@@ -215,13 +212,13 @@ CaugLOCL = [zeros(nstates,nstates), eye(nstates)]; %define errors as outputs (sh
 DaugLOCL = zeros(6,3);
 LOCLsys = ss(AaugLOCL, BaugLOCL, CaugLOCL, DaugLOCL);
 
-figure();
+figure('Name','Observer Error Transient 0 IC');
 initial(LOCLsys,2*zeros(2*nstates,1),10) %initial observer error states zero
-title('Observer error transient responses | Zero intial error')
+title('Observer error transient responses | Zero Intial Error')
 
-figure();
+figure('Name','Observer Error Transient With IC');
 initial(LOCLsys,2*ones(2*nstates,1),10) %initial observer error states non-zero
-title('Observer error transient responses | With inital error')
+title('Observer error transient responses | With Inital Error')
 
 
 %% # 6 Infinite Horizon Controller
@@ -229,7 +226,7 @@ title('Observer error transient responses | With inital error')
 umax_mps2 = thrust_kgmps2/massChaser_kg;
 rmag = 0.2;
 % rhistvec1 = x(:,1:3);
-rhistvec1 = zeros(size(x(:,1:3)));
+rhistvec1 = zeros(3,numel(tvec_s))';
 
 % Weights 
 awts = ones([1,numel(A(:,1))]);
@@ -259,7 +256,7 @@ CLsys = ss(Acl,Bcl,Ccl,Dcl);
 
 ucl1 = -Ks*xcl1' + Ff*rhistvec1';
 
-figure("Name",'Actuator Effort')
+figure("Name",'LQR Actuator Effort')
 subplot(311), hold on
 plot(tvec_s,ucl1(1,:))
 plot(tvec_s,umax_mps2*ones(size(tvec_s)),'--k');
@@ -277,7 +274,7 @@ plot(tvec_s,-umax_mps2*ones(size(tvec_s)),'--k');
 ylabel({'Acceleration';'Cross-Track (m/s^2)'});
 xlabel('Time (s)')
 
-figure("Name","Response Compared To Desired Position State")
+figure("Name","LQR Response Compared To Desired Position State")
 subplot(311)
 plot(tvec_s,ycl1(:,1),'DisplayName','Observed'); hold on;
 plot(tvec_s,rhistvec1(:,1),'DisplayName','Reference');
