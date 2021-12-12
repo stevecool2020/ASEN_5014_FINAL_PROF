@@ -78,7 +78,7 @@ massChaser_kg = 100;
 % X0 = [0 10000 0 0 0 0]; % in-track offset
 % X0 = [0 0 10000 0 0 0]; % cross-track offset
 % X0 = [10 375 0 0 0.00009 0];
-X0 = [100 5000 -1000 0 0 0]; % 500 meters in-track final approach
+X0 = [100 5000 -1000 0 0 0]; % TODO : finalize these numbers
 % Target radius
 rTgt_m = 6778E3;
 % Target mean motion
@@ -110,31 +110,38 @@ sgtitle('Initial Conditions System Response')
 %% #4 Manual Pole Placement
 
 % Specify desired closed-loop poles
-despoles = [-0.09 -0.06 -0.03 -0.02 -0.02 -0.01]; %dominant pole is real and at -2 
+despoles = [-0.05 -0.09 -0.06 -0.03 -0.02 -0.02 -0.01 -0.005 - 0.0025 -0.0001]./10; %dominant pole is real and at -2 
 %% Use place command to get feedback gain:
-K = place(A,B,despoles);
+% K = place(A,B,despoles);
 
-% Define closed-loop dynamics
-F1 = eye(2); %unity feedforward gain on ref inputs 
-F2 = inv(C/(-A+B*K)*B);
-F = F2;
-Acl = A - B*K;
-Bcl = B*F;
-Ccl = C;
-Dcl = D;
-CLsys = ss(Acl,Bcl,Ccl,Dcl);
-
+Aaug = [A, zeros(6,3);
+        -C, zeros(size(C,1))];
+Baug = [B; zeros(size(C,1), size(B,2))];
+Caug = [C, zeros(3,3)]; 
+Daug = zeros(3,3);
+Faug = [zeros(size(B));
+        eye(3)]; % F using final value theorem
+    
+Kaug = place(Aaug,Baug,despoles); 
+Aaugcl = Aaug - Baug*Kaug;
+Baugcl = Faug;
+Caugcl = Caug;
+Daugcl = Daug;
+CLaugsys = ss(Aaugcl,Baugcl,Caugcl,Daugcl);
 
 umax_mps2 = thrust_kgmps2/massChaser_kg;
 
 rhistvec = zeros(3,numel(tvec_s))';
 
+X0aug = [X0, 0, 0, 0]; % set the augmenmted integrated states to zero initial conditions
 % Check that closed-loop system specs met; change despoles otherwise
 %%get response to first reference input profile: 
-[Y_CL1,~,X_CL1] = lsim(CLsys,rhistvec,tvec_s, X0);
+[Y_CL1,~,X_CL1] = lsim(CLaugsys,rhistvec,tvec_s, X0aug);
 
 %compute resulting actuator efforts in each case, where u = -Kx + Fr
-U_CL1 = -K*X_CL1' + F*rhistvec'; 
+% U_CL1 = -Kaug*X_CL1' + Faug*rhistvec'; 
+U_CL1 = -Kaug*X_CL1'; 
+
 
 figure('Name','Manual Pole Placement Actuator Effort')
 subplot(311), hold on
@@ -161,7 +168,7 @@ plot(tvec_s,rhistvec(:,2),'DisplayName','Reference');
 legend show
 subplot(313)
 plot(tvec_s,Y_CL1(:,3),'DisplayName','Observed'); hold on;
-plot(tvec_s,rhistvec(:,3),'DisplayName','Reference')
+plot(tvec_s,rhistvec(:,3),'DisplayName','Reference');
 legend show
 
 
