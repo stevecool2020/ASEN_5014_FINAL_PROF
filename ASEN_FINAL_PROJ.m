@@ -61,7 +61,7 @@ OLsys.InputUnit = {'meters/seconds^2';'meters/seconds^2';'meters/seconds^2'};
 
 
 % define umax 
-thrust_kgmps2 = 25;
+thrust_kgmps2 = 10;
 massChaser_kg = 100; 
 
 % Open loop poles
@@ -78,7 +78,7 @@ massChaser_kg = 100;
 % X0 = [0 10000 0 0 0 0]; % in-track offset
 % X0 = [0 0 10000 0 0 0]; % cross-track offset
 % X0 = [10 375 0 0 0.00009 0];
-X0 = [100 5000 -1000 0 0 0]; % 500 meters in-track final approach
+X0 = [0 500 0 0 0 0]; % 500 meters in-track final approach
 % Target radius
 rTgt_m = 6778E3;
 % Target mean motion
@@ -90,22 +90,44 @@ tvec_s = 0:0.1:2*TTgt_s;
 
 [y,t,x] = initial(OLsys,X0,tvec_s); 
 
-figure('Name','Open Loop Response to Initial Conditions');
-subplot(311)
-plot(t,y(:,1),'DisplayName','Radial Obs');  hold on;
-plot(t,x(:,1),'DisplayName','Radial State'); 
-legend('show'); ylabel('meters'); grid minor;
-subplot(312)
-plot(t,y(:,2),'DisplayName','Along-Track Obsv'); hold on;
-plot(t,x(:,2),'DisplayName','Along-Track State'); 
-legend('show'); ylabel('meters'); grid minor;
-subplot(313)
-plot(t,y(:,3),'DisplayName','Cross-Track Obsv'); hold on;
-plot(t,y(:,3),'DisplayName','Cross-Track State');
-legend('show'); ylabel('meters'); grid minor;
-xlabel('Time (seconds)');
-sgtitle('Initial Conditions System Response')
+nRadialCond = 5;
+colorTrips = [zeros(nRadialCond,2),linspace(0.2,1,nRadialCond)'];
+InitialStatePhaseSpaceData = nan(numel(tvec_s), 6, nRadialCond);
 
+figInitPhaseSpace = figure();
+for i=1:nRadialCond
+   thisInitCond = X0 + [i 0 0 0 0 0];
+   [~,~,InitialStatePhaseSpaceData(:,:,i)] = initial(OLsys,thisInitCond,tvec_s);
+   subplot(311);
+   plot(t,InitialStatePhaseSpaceData(:,1,i),'LineWidth',3,'Color',colorTrips(i,:)); 
+   grid minor; hold on;
+   ylabel({'Distance';'Radial (m)'})
+   subplot(312);
+   plot(t,InitialStatePhaseSpaceData(:,2,i),'LineWidth',3,'Color',colorTrips(i,:)); 
+   grid minor; hold on;
+   ylabel({'Distance';'In-Track (m)'})
+   subplot(313);
+   plot(t,InitialStatePhaseSpaceData(:,3,i),'LineWidth',3,'Color',colorTrips(i,:)); 
+   grid minor; hold on;
+   ylabel({'Distance';'Cross-Track (m)'})
+end
+sgtitle('Initial Conditions Open Loop Response');
+
+% figure('Name','Open Loop Response to Initial Conditions');
+% subplot(311)
+% plot(t,y(:,1),'DisplayName','Radial Observed');  hold on;
+% plot(t,x(:,1),'DisplayName','Radial State'); 
+% legend('show'); ylabel('meters'); grid minor;
+% subplot(312)
+% plot(t,y(:,2),'DisplayName','Along-Track Observed'); hold on;
+% % plot(t,x(:,2),'DisplayName','Along-Track State'); 
+% legend('show'); ylabel('meters'); grid minor;
+% subplot(313)
+% plot(t,y(:,3),'DisplayName','Cross-Track Observed'); hold on;
+% % plot(t,y(:,3),'DisplayName','Cross-Track State');
+% legend('show'); ylabel('meters'); grid minor;
+% xlabel('Time (seconds)');
+% sgtitle('Initial Conditions System Response')
 
 %% #4 Manual Pole Placement
 
@@ -234,8 +256,8 @@ awts = ones([1,numel(A(:,1))]);
 rho  = 10;
 awts = awts./sum(awts);
 
-poswts = [20 90 60];
-velwts = 1*[1 1 1];
+poswts = 500*[2 9 6];
+velwts = 100*[1 1 1];
 Q = diag(awts./[poswts, velwts].^2);
 R = rho*diag(1./(umax_mps2.*[1 1 1]).^2);
 
@@ -274,6 +296,7 @@ plot(tvec_s,umax_mps2*ones(size(tvec_s)),'--k');
 plot(tvec_s,-umax_mps2*ones(size(tvec_s)),'--k');
 ylabel({'Acceleration';'Cross-Track (m/s^2)'});
 xlabel('Time (s)')
+sgtitle('LQR Actuator Effort')
 
 figure("Name","LQR Response Compared To Desired Position State")
 subplot(311)
@@ -292,7 +315,22 @@ plot(tvec_s,rhistvec1(:,3),'DisplayName','Reference')
 ylabel({'Distance';'Cross-track (m)'}); 
 xlabel('Time (s)')
 legend show
+sgtitle('LQR Control Results')
 
+% figure("Name","Response Compared To Desired Position State")
+% subplot(311)
+% plot(tvec_s,xcl1(:,4),'DisplayName','State'); hold on;
+% ylabel({'Velocity';'Radial (m/s)'});
+% legend show
+% subplot(312)
+% plot(tvec_s,xcl1(:,5),'DisplayName','State'); hold on;
+% ylabel({'Velocity';'In-track (m/s)'});
+% legend show
+% subplot(313)
+% plot(tvec_s,xcl1(:,6),'DisplayName','State'); hold on;
+% ylabel({'Velocity';'Cross-track (m/s)'}); 
+% xlabel('Time (s)')
+% legend show
 
 
 %%%% SCRIPT STUB %%%%
