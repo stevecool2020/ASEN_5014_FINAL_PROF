@@ -144,7 +144,8 @@ massChaser_kg = 100;
 
 umax_mps2 = 1E-4; % thrust_kgmps2/massChaser_kg;
 rmag = 0.2;
-rhistvec1 = x(:,1:3);
+% rhistvec1 = x(:,1:3);
+rhistvec1 = zeros(size(x(:,1:3)));
 
 % Weights based on prof code...
 awts = ones([1,numel(A(:,1))]);
