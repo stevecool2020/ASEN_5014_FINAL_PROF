@@ -110,7 +110,7 @@ sgtitle('Initial Conditions System Response')
 %% #4 Manual Pole Placement
 
 % Specify desired closed-loop poles
-despoles = [-0.09 -0.06 -0.03 -0.02 -0.02 -0.01]; %dominant pole is real and at -2 
+despoles = [-0.09 -0.06 -0.03 -0.02 -0.02 -0.01]./10; %dominant pole is real and at -2 
 %% Use place command to get feedback gain:
 K = place(A,B,despoles);
 
