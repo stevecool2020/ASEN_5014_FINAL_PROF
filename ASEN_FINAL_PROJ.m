@@ -273,6 +273,7 @@ plot(tvec_s,umax_mps2*ones(size(tvec_s)),'--k');
 plot(tvec_s,-umax_mps2*ones(size(tvec_s)),'--k');
 ylabel({'Acceleration';'Cross-Track (m/s^2)'});
 xlabel('Time (s)')
+sgtitle('LQR Actuator Effort')
 
 figure("Name","LQR Response Compared To Desired Position State")
 subplot(311)
@@ -291,6 +292,7 @@ plot(tvec_s,rhistvec1(:,3),'DisplayName','Reference')
 ylabel({'Distance';'Cross-track (m)'}); 
 xlabel('Time (s)')
 legend show
+sgtitle('LQR Control Results')
 
 % figure("Name","Response Compared To Desired Position State")
 % subplot(311)
