@@ -205,7 +205,6 @@ L = (place(A',C',desobsvpoles))';
 % define new closed loop observer system
 AaugLOCL = [A B*K;
            zeros(nstates) A-L*C];
-% BaugLOOL = [B; B]; % open loop version
 BaugLOCL = [B*F; zeros(size(B))];
 CaugLOCL = [zeros(nstates,nstates), eye(nstates)]; %define errors as outputs (should --> 0)
 DaugLOCL = zeros(6,3);
@@ -222,14 +221,12 @@ title('Observer error transient responses | With Inital Error')
 
 
 %%Define observer error augmented closed-loop dynamics with integral states 
-%%(9 states total: 6 from original system + 6 from observer errors)
+%%(12 states total: 6 from original system + 6 from observer errors)
 A_CLO = [A-B*K B*K;
            zeros(nstates) A-L*C];
 B_CLO = [B*F; zeros(size(B))];
 C_CLO = [C, zeros(3,6)]; 
 D_CLO = zeros(3,3);
-F_CLO = [zeros(size(B));
-        eye(3)]; % F using final value theorem
 CLaugsys3 = ss(A_CLO,B_CLO,C_CLO,D_CLO);
 
 
@@ -268,7 +265,7 @@ R = rho*diag(1./(umax_mps2.*[1 1 1]).^2);
 %    usLqr(:,i) = -R^-1 * B'*W*x(i,:)';
 % end
 
-Ff = (C/(-A+B*Ks)*B)^-1;
+Ff = inv(C/(-A+B*Ks)*B);
 Acl = A - B*Ks;
 Bcl = B*Ff;
 Ccl = C;
