@@ -265,7 +265,20 @@ R = rho*diag(1./(umax_mps2.*[1 1 1]).^2);
 %    usLqr(:,i) = -R^-1 * B'*W*x(i,:)';
 % end
 
-Ff = inv(C/(-A+B*Ks)*B);
+% LQR without observer
+Ff = (C/(-A+B*Ks)*B)^-1;
+
+Acl = A - B*Ks;
+Bcl = B*Ff;
+Ccl = C;
+Dcl = D;
+CLsys = ss(Acl,Bcl,Ccl,Dcl);
+
+[ycl1,~,xcl1] = lsim(CLsys,rhistvec1',tvec_s,X0);
+
+ucl1 = -Ks*xcl1' + Ff*rhistvec1';
+
+% Ff = inv(C/(-A+B*Ks)*B); 
 A_CLOLQR = [A-B*Ks B*Ks;
            zeros(nstates) A-L*C];
 B_CLOLQR = [B*Ff; zeros(size(B))];
@@ -273,62 +286,77 @@ C_CLOLQR = [C, zeros(3,6)];
 D_CLOLQR = zeros(3,3);
 CLsys = ss(A_CLOLQR,B_CLOLQR,C_CLOLQR,D_CLOLQR);
 
-[ycl1,~,xcl1] = lsim(CLsys,rhistvec1',tvec_s,X0LO_with_obs_error);
+[yclo1,~,xclo1] = lsim(CLsys,rhistvec1',tvec_s,X0LO_with_obs_error);
 
-ucl1 = -Ks*xcl1(:,1:6)' + Ff*rhistvec1';
+uclo1 = -Ks*xcl1(:,1:6)' + Ff*rhistvec1';
 
 figure("Name",'LQR Actuator Effort')
 subplot(311), hold on
-plot(tvec_s,ucl1(1,:))
-plot(tvec_s,umax_mps2*ones(size(tvec_s)),'--k');
-plot(tvec_s,-umax_mps2*ones(size(tvec_s)),'--k');
-ylabel({'Acceleration';'Radial (m/s^2)'});
+plot(tvec_s,ucl1(1,:),'LineWidth',2)
+plot(tvec_s,uclo1(1,:),'LineWidth',2)
+plot(tvec_s,umax_mps2*ones(size(tvec_s)),'--k','LineWidth',2);
+plot(tvec_s,-umax_mps2*ones(size(tvec_s)),'--k','LineWidth',2);
+legend('show','LQR no Observer','LQR with Observer','Upper Bound','LowerBound')
+ylabel({'Acceleration';'Radial (m/s^2)'}); grid minor
 subplot(312), hold on
-plot(tvec_s,ucl1(2,:))
-plot(tvec_s,umax_mps2*ones(size(tvec_s)),'--k');
-plot(tvec_s,-umax_mps2*ones(size(tvec_s)),'--k');
-ylabel({'Acceleration';'In-Track (m/s^2)'});
+plot(tvec_s,ucl1(2,:),'LineWidth',2)
+plot(tvec_s,uclo1(2,:),'LineWidth',2)
+plot(tvec_s,umax_mps2*ones(size(tvec_s)),'--k','LineWidth',2);
+plot(tvec_s,-umax_mps2*ones(size(tvec_s)),'--k','LineWidth',2);
+ylabel({'Acceleration';'In-Track (m/s^2)'});grid minor
 subplot(313), hold on
-plot(tvec_s,ucl1(3,:))
-plot(tvec_s,umax_mps2*ones(size(tvec_s)),'--k');
-plot(tvec_s,-umax_mps2*ones(size(tvec_s)),'--k');
-ylabel({'Acceleration';'Cross-Track (m/s^2)'});
+plot(tvec_s,ucl1(3,:),'LineWidth',2)
+plot(tvec_s,uclo1(3,:),'LineWidth',2)
+plot(tvec_s,umax_mps2*ones(size(tvec_s)),'--k','LineWidth',2);
+plot(tvec_s,-umax_mps2*ones(size(tvec_s)),'--k','LineWidth',2);
+ylabel({'Acceleration';'Cross-Track (m/s^2)'});grid minor
 xlabel('Time (s)')
 sgtitle('LQR Actuator Effort')
 
 figure("Name","LQR Response Compared To Desired Position State")
 subplot(311)
-plot(tvec_s,ycl1(:,1),'DisplayName','Observed'); hold on;
-plot(tvec_s,rhistvec1(:,1),'DisplayName','Reference');
-ylabel({'Distance';'Radial (m)'});
+plot(tvec_s,ycl1(:,1),'LineWidth',2); hold on;
+plot(tvec_s,yclo1(:,1),'LineWidth',2); 
+plot(tvec_s,rhistvec1(:,1),'k','LineWidth',2);
+legend('show','LQR no Observer','LQR with Observer','Refernce','autoupdate','off')
+ylabel({'Distance';'Radial (m)'});grid minor
 legend show
 subplot(312)
-plot(tvec_s,ycl1(:,2),'DisplayName','Observed'); hold on;
-plot(tvec_s,rhistvec1(:,2),'DisplayName','Reference');
-ylabel({'Distance';'In-track (m)'});
+plot(tvec_s,ycl1(:,2),'LineWidth',2); hold on;
+plot(tvec_s,yclo1(:,2),'LineWidth',2); 
+plot(tvec_s,rhistvec1(:,2),'k','LineWidth',2);
+ylabel({'Distance';'In-track (m)'});grid minor
 legend show
 subplot(313)
-plot(tvec_s,ycl1(:,3),'DisplayName','Observed'); hold on;
-plot(tvec_s,rhistvec1(:,3),'DisplayName','Reference')
-ylabel({'Distance';'Cross-track (m)'}); 
+plot(tvec_s,ycl1(:,3),'LineWidth',2); hold on;
+plot(tvec_s,yclo1(:,3),'LineWidth',2); 
+plot(tvec_s,rhistvec1(:,3),'k','LineWidth',2)
+ylabel({'Distance';'Cross-track (m)'}); grid minor
 xlabel('Time (s)')
 legend show
-sgtitle('LQR Control Results')
+sgtitle({'LQR Control Results';'Position Response'})
 
-% figure("Name","Response Compared To Desired Position State")
-% subplot(311)
-% plot(tvec_s,xcl1(:,4),'DisplayName','State'); hold on;
-% ylabel({'Velocity';'Radial (m/s)'});
-% legend show
-% subplot(312)
-% plot(tvec_s,xcl1(:,5),'DisplayName','State'); hold on;
-% ylabel({'Velocity';'In-track (m/s)'});
-% legend show
-% subplot(313)
-% plot(tvec_s,xcl1(:,6),'DisplayName','State'); hold on;
-% ylabel({'Velocity';'Cross-track (m/s)'}); 
-% xlabel('Time (s)')
-% legend show
+figure("Name","Response Compared To Desired Position State")
+subplot(311)
+plot(tvec_s,xcl1(:,4),'LineWidth',2); hold on;
+plot(tvec_s,xclo1(:,4),'LineWidth',2); 
+plot(tvec_s,zeros(size(tvec_s)),'k','LineWidth',2);
+legend('show','LQR no Observer','LQR with Observer','Desired','autoupdate','off')
+ylabel({'Velocity';'Radial (m/s)'}); grid minor
+legend show
+subplot(312)
+plot(tvec_s,xcl1(:,5),'LineWidth',2); hold on;
+plot(tvec_s,xclo1(:,5),'LineWidth',2);
+plot(tvec_s,zeros(size(tvec_s)),'k','LineWidth',2);
+ylabel({'Velocity';'In-track (m/s)'}); grid minor
+legend show
+subplot(313)
+plot(tvec_s,xcl1(:,6),'LineWidth',2); hold on;
+plot(tvec_s,xclo1(:,6),'LineWidth',2); 
+plot(tvec_s,zeros(size(tvec_s)),'k','LineWidth',2);
+ylabel({'Velocity';'Cross-track (m/s)'});  grid minor
+xlabel('Time (s)')
+sgtitle({'LQR Control Results';'Velocity Response'})
 
 
 %%%% SCRIPT STUB %%%%
