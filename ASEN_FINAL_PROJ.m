@@ -230,14 +230,14 @@ D_CLO = zeros(3,3);
 CLaugsys3 = ss(A_CLO,B_CLO,C_CLO,D_CLO);
 
 
-X0LO = [X0, 0, 0, 0, 0, 0, 0];
+X0LO_no_obs_error = [X0, 0, 0, 0, 0, 0, 0];
 figure('Name','Closed Loop Response With 0 Observer IC');
-lsim(CLaugsys3,rhistvec,tvec_s,X0LO) %initial observer error states non-zero
+lsim(CLaugsys3,rhistvec,tvec_s,X0LO_no_obs_error) %initial observer error states non-zero
 title('Closed Loop Response With 0 Observer ICs | Without Inital Obvserver Error')
 
-X0LO = [X0, 10, 10, 1000, 10, 10, 10];
+X0LO_with_obs_error = [X0, 10, 10, 10, 10, 10, 10]; % TODO: how big should these errors be
 figure('Name','Closed Loop Response With 0 Observer IC');
-lsim(CLaugsys3,rhistvec,tvec_s,X0LO) %initial observer error states non-zero
+lsim(CLaugsys3,rhistvec,tvec_s,X0LO_with_obs_error) %initial observer error states non-zero
 title('Closed Loop Response With 0 Observer ICs | Without Inital Obvserver Error')
 
 
@@ -266,15 +266,16 @@ R = rho*diag(1./(umax_mps2.*[1 1 1]).^2);
 % end
 
 Ff = inv(C/(-A+B*Ks)*B);
-Acl = A - B*Ks;
-Bcl = B*Ff;
-Ccl = C;
-Dcl = D;
-CLsys = ss(Acl,Bcl,Ccl,Dcl);
+A_CLOLQR = [A-B*Ks B*Ks;
+           zeros(nstates) A-L*C];
+B_CLOLQR = [B*Ff; zeros(size(B))];
+C_CLOLQR = [C, zeros(3,6)]; 
+D_CLOLQR = zeros(3,3);
+CLsys = ss(A_CLOLQR,B_CLOLQR,C_CLOLQR,D_CLOLQR);
 
-[ycl1,~,xcl1] = lsim(CLsys,rhistvec1',tvec_s,X0);
+[ycl1,~,xcl1] = lsim(CLsys,rhistvec1',tvec_s,X0LO_with_obs_error);
 
-ucl1 = -Ks*xcl1' + Ff*rhistvec1';
+ucl1 = -Ks*xcl1(:,1:6)' + Ff*rhistvec1';
 
 figure("Name",'LQR Actuator Effort')
 subplot(311), hold on
