@@ -198,7 +198,7 @@ is_observer_controllable = rank(Co_observer) == nstates;
 % New augmented state for luenberger observer: Xaug_obs = [x; ex; ey; ez; exdot; eydot; ezdot]
 
 % Specify desired closed-loop poles for the Luenberger observer
-desobsvpoles =  [-12 -11 -10 -9, -8, -7]; % TODO : Fine tune 
+desobsvpoles =  [-6, -5, -4 -3, -2, -1];
 % Use place command to get Luenberger observer gain
 L = (place(A',C',desobsvpoles))';
 
@@ -206,16 +206,20 @@ L = (place(A',C',desobsvpoles))';
 AaugLOCL = [A B*K;
            zeros(nstates) A-L*C];
 BaugLOCL = [B*F; zeros(size(B))];
-CaugLOCL = [zeros(nstates,nstates), eye(nstates)]; %define errors as outputs (should --> 0)
+CaugLOCL = [zeros(nstates,nstates), eye(nstates)]; %define errors as outputs
 DaugLOCL = zeros(6,3);
 LOCLsys = ss(AaugLOCL, BaugLOCL, CaugLOCL, DaugLOCL);
 
+X0_no_obs_error = [0, 0, 0, 0, 0, 0];
+X0LO_no_obs_error = [X0, X0_no_obs_error]; %initial observer error states zero
 figure('Name','Observer Error Transient 0 IC');
-initial(LOCLsys,2*zeros(2*nstates,1),10) %initial observer error states zero
+initial(LOCLsys,X0LO_no_obs_error,10);
 title('Observer error transient responses | Zero Intial Error')
 
+X0_with_obs_error = [ 20, 20, 20, 0.1, 0.1, 0.1];
+X0LO_with_obs_error = [X0, X0_with_obs_error]; %initial observer error states non-zero
 figure('Name','Observer Error Transient With IC');
-initial(LOCLsys,2*ones(2*nstates,1),10) %initial observer error states non-zero
+initial(LOCLsys,X0LO_with_obs_error,10);
 title('Observer error transient responses | With Inital Error')
 
 
@@ -230,12 +234,12 @@ D_CLO = zeros(3,3);
 CLaugsys3 = ss(A_CLO,B_CLO,C_CLO,D_CLO);
 
 
-X0LO_no_obs_error = [X0, 0, 0, 0, 0, 0, 0];
+X0LO_no_obs_error = [X0, X0_no_obs_error];
 figure('Name','Closed Loop Response With 0 Observer IC');
 lsim(CLaugsys3,rhistvec,tvec_s,X0LO_no_obs_error) %initial observer error states non-zero
 title('Closed Loop Response With 0 Observer ICs | Without Inital Obvserver Error')
 
-X0LO_with_obs_error = [X0, 10, 10, 10, 10, 10, 10]; % TODO: how big should these errors be
+X0LO_with_obs_error = [X0, X0_with_obs_error]; 
 figure('Name','Closed Loop Response With 0 Observer IC');
 lsim(CLaugsys3,rhistvec,tvec_s,X0LO_with_obs_error) %initial observer error states non-zero
 title('Closed Loop Response With 0 Observer ICs | Without Inital Obvserver Error')
@@ -273,7 +277,7 @@ C_CLOLQR = [C, zeros(3,6)];
 D_CLOLQR = zeros(3,3);
 CLsys = ss(A_CLOLQR,B_CLOLQR,C_CLOLQR,D_CLOLQR);
 
-[ycl1,~,xcl1] = lsim(CLsys,rhistvec1',tvec_s,X0LO_with_obs_error);
+[ycl1,~,xcl1] = lsim(CLsys,rhistvec1',tvec_s,X0LO_no_obs_error);
 
 ucl1 = -Ks*xcl1(:,1:6)' + Ff*rhistvec1';
 
