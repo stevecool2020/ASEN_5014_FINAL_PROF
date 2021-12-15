@@ -291,17 +291,24 @@ CLsys = ss(A_CLOLQR,B_CLOLQR,C_CLOLQR,D_CLOLQR);
 uclo1 = -Ks*xcl1(:,1:6)' + Ff*rhistvec1';
 
 zoomedInPlots = false;
+includeP4Results = true;
 fineThrustAccel = 3E-3/massChaser_kg;
 figure("Name",'LQR Actuator Effort')
 subplot(311), hold on
+if includeP4Results, plot(tvec_s,U_CL1(1,:),'LineWidth',2), end
 plot(tvec_s,ucl1(1,:),'LineWidth',2)
 plot(tvec_s,uclo1(1,:),'LineWidth',2)
 plot(tvec_s,umax_mps2*ones(size(tvec_s)),'--k','LineWidth',2);
 plot(tvec_s,-umax_mps2*ones(size(tvec_s)),'--k','LineWidth',2);
 if zoomedInPlots, ylim(fineThrustAccel*[-1 1]); end
-legend('show','LQR no Observer','LQR with Observer','Upper Bound','LowerBound')
+if includeP4Results
+   legend('show','Pole Placement','LQR no Observer','LQR with Observer','Upper Bound','LowerBound')
+else
+   legend('show','LQR no Observer','LQR with Observer','Upper Bound','LowerBound')
+end
 ylabel({'Acceleration';'Radial (m/s^2)'}); grid minor
 subplot(312), hold on
+if includeP4Results, plot(tvec_s,U_CL1(2,:),'LineWidth',2), end
 plot(tvec_s,ucl1(2,:),'LineWidth',2)
 plot(tvec_s,uclo1(2,:),'LineWidth',2)
 plot(tvec_s,umax_mps2*ones(size(tvec_s)),'--k','LineWidth',2);
@@ -309,6 +316,7 @@ plot(tvec_s,-umax_mps2*ones(size(tvec_s)),'--k','LineWidth',2);
 if zoomedInPlots, ylim(fineThrustAccel*[-1 1]); end
 ylabel({'Acceleration';'In-Track (m/s^2)'});grid minor
 subplot(313), hold on
+if includeP4Results, plot(tvec_s,U_CL1(3,:),'LineWidth',2), end
 plot(tvec_s,ucl1(3,:),'LineWidth',2)
 plot(tvec_s,uclo1(3,:),'LineWidth',2)
 plot(tvec_s,umax_mps2*ones(size(tvec_s)),'--k','LineWidth',2);
@@ -316,53 +324,67 @@ plot(tvec_s,-umax_mps2*ones(size(tvec_s)),'--k','LineWidth',2);
 if zoomedInPlots, ylim(fineThrustAccel*[-1 1]); end
 ylabel({'Acceleration';'Cross-Track (m/s^2)'});grid minor
 xlabel('Time (s)')
-sgtitle('LQR Actuator Effort')
+sgtitle('Actuator Effort')
 
 figure("Name","LQR Response Compared To Desired Position State")
-subplot(311)
-plot(tvec_s,ycl1(:,1),'LineWidth',2); hold on;
+subplot(311); hold on;
+if includeP4Results, plot(tvec_s,Y_CL1(:,1),'LineWidth',2), end
+plot(tvec_s,ycl1(:,1),'LineWidth',2); 
 plot(tvec_s,yclo1(:,1),'LineWidth',2); 
 plot(tvec_s,rhistvec1(:,1),'k','LineWidth',2);
 if zoomedInPlots, ylim(0.01*[-1 1]); end
-legend('show','LQR no Observer','LQR with Observer','Refernce','autoupdate','off')
+if includeP4Results
+   legend('show','Pole Placement','LQR no Observer','LQR with Observer','Refernce','autoupdate','off')
+else
+   legend('show','LQR no Observer','LQR with Observer','Refernce','autoupdate','off')
+end
 ylabel({'Distance';'Radial (m)'});grid minor
-subplot(312)
-plot(tvec_s,ycl1(:,2),'LineWidth',2); hold on;
+subplot(312);hold on;
+if includeP4Results, plot(tvec_s,Y_CL1(:,2),'LineWidth',2), end
+plot(tvec_s,ycl1(:,2),'LineWidth',2); 
 plot(tvec_s,yclo1(:,2),'LineWidth',2); 
 plot(tvec_s,rhistvec1(:,2),'k','LineWidth',2);
 if zoomedInPlots, ylim(0.01*[-1 1]); end
 ylabel({'Distance';'In-track (m)'});grid minor
-subplot(313)
-plot(tvec_s,ycl1(:,3),'LineWidth',2); hold on;
+subplot(313); hold on;
+if includeP4Results, plot(tvec_s,Y_CL1(:,3),'LineWidth',2), end
+plot(tvec_s,ycl1(:,3),'LineWidth',2); 
 plot(tvec_s,yclo1(:,3),'LineWidth',2); 
 plot(tvec_s,rhistvec1(:,3),'k','LineWidth',2)
 if zoomedInPlots, ylim(0.01*[-1 1]); end
 ylabel({'Distance';'Cross-track (m)'}); grid minor
 xlabel('Time (s)')
-sgtitle({'LQR Control Results';'Position Response'})
+sgtitle({'Control Results';'Position Response'})
 
 figure("Name","Response Compared To Desired Position State")
-subplot(311)
+subplot(311); hold on
+if includeP4Results, plot(tvec_s,X_CL1(:,4),'LineWidth',2), end
 plot(tvec_s,xcl1(:,4),'LineWidth',2); hold on;
 plot(tvec_s,xclo1(:,4),'LineWidth',2); 
 plot(tvec_s,zeros(size(tvec_s)),'k','LineWidth',2);
 if zoomedInPlots, ylim(0.01*[-1 1]); end
-legend('show','LQR no Observer','LQR with Observer','Desired','autoupdate','off')
+if includeP4Results
+   legend('show','Pole Placement','LQR no Observer','LQR with Observer','Refernce','autoupdate','off')
+else
+   legend('show','LQR no Observer','LQR with Observer','Refernce','autoupdate','off')
+end
 ylabel({'Velocity';'Radial (m/s)'}); grid minor
-subplot(312)
+subplot(312); hold on
+if includeP4Results, plot(tvec_s,X_CL1(:,5),'LineWidth',2), end
 plot(tvec_s,xcl1(:,5),'LineWidth',2); hold on;
 plot(tvec_s,xclo1(:,5),'LineWidth',2);
 plot(tvec_s,zeros(size(tvec_s)),'k','LineWidth',2);
 if zoomedInPlots, ylim(0.01*[-1 1]); end
 ylabel({'Velocity';'In-track (m/s)'}); grid minor
-subplot(313)
+subplot(313); hold on
+if includeP4Results, plot(tvec_s,X_CL1(:,6),'LineWidth',2), end
 plot(tvec_s,xcl1(:,6),'LineWidth',2); hold on;
 plot(tvec_s,xclo1(:,6),'LineWidth',2); 
 plot(tvec_s,zeros(size(tvec_s)),'k','LineWidth',2);
 if zoomedInPlots, ylim(0.01*[-1 1]); end
 ylabel({'Velocity';'Cross-track (m/s)'});  grid minor
 xlabel('Time (s)')
-sgtitle({'LQR Control Results';'Velocity Response'})
+sgtitle({'Control Results';'Velocity Response'})
 
 
 %%%% SCRIPT STUB %%%%
