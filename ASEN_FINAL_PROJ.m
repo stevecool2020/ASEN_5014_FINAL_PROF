@@ -252,7 +252,7 @@ rhistvec1 = zeros(3,numel(tvec_s))';
 awts = ones([1,numel(A(:,1))]);
 rho  = 10;
 awts = awts./sum(awts);
-close all;
+
 poswts = 10*[2 9 6];
 velwts = 100*[1 1 1];
 Q = diag(awts./[poswts, velwts].^2);
@@ -289,7 +289,7 @@ CLsys = ss(A_CLOLQR,B_CLOLQR,C_CLOLQR,D_CLOLQR);
 [yclo1,~,xclo1] = lsim(CLsys,rhistvec1',tvec_s,X0LO_with_obs_error);
 
 uclo1 = -Ks*xcl1(:,1:6)' + Ff*rhistvec1';
-
+% close all;
 zoomedInPlots = false;
 includeP4Results = true;
 fineThrustAccel = 3E-3/massChaser_kg;
