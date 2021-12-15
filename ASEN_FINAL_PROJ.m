@@ -1,5 +1,5 @@
 clear; close all
-
+saveFigs = true;
 %%%%%% A,B,C,D Matrices %%%%%%
 n = sqrt(398600 / 6778^3);
 A = [0 0 0 1 0 0;
@@ -219,7 +219,7 @@ title('Observer error transient responses | Zero Intial Error')
 X0_with_obs_error = [ 20, 20, 20, 0.1, 0.1, 0.1];
 X0LO_with_obs_error = [X0, X0_with_obs_error]; %initial observer error states non-zero
 figure('Name','Observer Error Transient With IC');
-initial(LOCLsys,X0LO_with_obs_error,10);
+H = initialplot(LOCLsys,X0LO_with_obs_error,10);
 title('Observer error transient responses | With Inital Error')
 
 
@@ -235,16 +235,209 @@ CLaugsys3 = ss(A_CLO,B_CLO,C_CLO,D_CLO);
 
 
 X0LO_no_obs_error = [X0, X0_no_obs_error];
-figure('Name','Closed Loop Response With 0 Observer IC');
-lsim(CLaugsys3,rhistvec,tvec_s,X0LO_no_obs_error) %initial observer error states non-zero
-title('Closed Loop Response With 0 Observer ICs | Without Inital Obvserver Error')
+
+[ycl1,~,xcl1] = lsim(CLaugsys3,rhistvec,tvec_s,X0LO_no_obs_error); %initial observer error states non-zero
+% figure('Name','Closed Loop Response With 0 Observer IC');
+% title('Closed Loop Response With 0 Observer ICs | Without Inital Obvserver Error')
+
+U_CL1 = -K*xcl1(:,1:6)' + F*rhistvec'; 
+
+f = figure('Name','Manual Pole Placement With Observer 0 ICs Actuator Effort')
+sgtitle('Manual Pole Placement With Observer 0 ICs Actuator Effort')
+subplot(311), hold on
+plot(tvec_s,U_CL1(1,:))
+plot(tvec_s,umax_mps2*ones(size(tvec_s)),'--k');
+plot(tvec_s,-umax_mps2*ones(size(tvec_s)),'--k');
+ylabel('X Control Effort (m/s^2)')
+legend('Effort', 'Bounds');
+subplot(312), hold on
+plot(tvec_s,U_CL1(2,:))
+plot(tvec_s,umax_mps2*ones(size(tvec_s)),'--k');
+plot(tvec_s,-umax_mps2*ones(size(tvec_s)),'--k');
+ylabel('Y Control Effort (m/s^2)')
+legend('Effort', 'Bounds');
+
+subplot(313), hold on
+plot(tvec_s,U_CL1(3,:))
+plot(tvec_s,umax_mps2*ones(size(tvec_s)),'--k');
+plot(tvec_s,-umax_mps2*ones(size(tvec_s)),'--k');
+ylabel('Z Control Effort (m/s^2)')
+xlabel('Time (s)')
+legend('Effort', 'Bounds');
+
+filename = 'actuator_0_ic';
+if saveFigs
+    saveas(f,filename);
+    exportgraphics(f,[filename, '.png']);
+end
+
+
+f = figure('Name','Manual Pole Placement With Observer 0 ICs: Response Compared To Desired Position State')
+sgtitle('Manual Pole Placement With Observer 0 ICs: Response Compared To Desired Position State');
+subplot(311)
+plot(tvec_s,ycl1(:,1),'DisplayName','Observed'); hold on;
+plot(tvec_s,rhistvec(:,1),'DisplayName','Reference');
+ylabel('X (m)');
+legend show
+subplot(312)
+plot(tvec_s,ycl1(:,2),'DisplayName','Observed'); hold on;
+plot(tvec_s,rhistvec(:,2),'DisplayName','Reference');
+ylabel('Y (m)');
+legend show
+subplot(313)
+plot(tvec_s,ycl1(:,3),'DisplayName','Observed'); hold on;
+plot(tvec_s,rhistvec(:,3),'DisplayName','Reference')
+ylabel('Z (m)');
+xlabel('Time (sec)');
+legend show
+filename = 'output_0_ic';
+if saveFigs
+    saveas(f,filename);
+    exportgraphics(f,[filename, '.png']);
+end
+
+
+idx = find(tvec_s>10,1);
+f = figure('Name','Manual Pole Placement With Observer 0 ICs: Observer Response')
+sgtitle('Manual Pole Placement With Observer 0 ICs: Observer Response');
+subplot(611)
+plot(tvec_s(1:idx),xcl1(1:idx,7),'DisplayName','Simulated'); hold on;
+plot(tvec_s(1:idx),rhistvec(1:idx,1),'DisplayName','Desired');
+ylabel('x error (m)');
+legend show
+subplot(612)
+plot(tvec_s(1:idx),xcl1(1:idx,8),'DisplayName','Simulated'); hold on;
+plot(tvec_s(1:idx),rhistvec(1:idx,2),'DisplayName','Desired');
+ylabel('y error (m)');
+legend show
+subplot(613)
+plot(tvec_s(1:idx),xcl1(1:idx,9),'DisplayName','Simulated'); hold on;
+plot(tvec_s(1:idx),rhistvec(1:idx,3),'DisplayName','Desired')
+ylabel('z error (m)');
+legend show
+subplot(614)
+plot(tvec_s(1:idx),xcl1(1:idx,10),'DisplayName','Simulated'); hold on;
+plot(tvec_s(1:idx),rhistvec(1:idx,3),'DisplayName','Desired')
+ylabel('xdot error (m)');
+legend show
+subplot(615)
+plot(tvec_s(1:idx),xcl1(1:idx,11),'DisplayName','Simulated'); hold on;
+plot(tvec_s(1:idx),rhistvec(1:idx,3),'DisplayName','Desired')
+ylabel('ydot error (m)');
+legend show
+subplot(616)
+plot(tvec_s(1:idx),xcl1(1:idx,12),'DisplayName','Simulated'); hold on;
+plot(tvec_s(1:idx),rhistvec(1:idx,3),'DisplayName','Desired')
+ylabel('zdot error (m)');
+xlabel('Time (sec)');
+legend show
+
+filename = 'observer_0_ic';
+if saveFigs
+    saveas(f,filename);
+    exportgraphics(f,[filename, '.png']);
+end
+
+
 
 X0LO_with_obs_error = [X0, X0_with_obs_error]; 
-figure('Name','Closed Loop Response With 0 Observer IC');
-lsim(CLaugsys3,rhistvec,tvec_s,X0LO_with_obs_error) %initial observer error states non-zero
-title('Closed Loop Response With 0 Observer ICs | Without Inital Obvserver Error')
+[ycl1,~,xcl1] = lsim(CLaugsys3,rhistvec,tvec_s,X0LO_with_obs_error); %initial observer error states non-zero
+U_CL1 = -K*xcl1(:,1:6)' + F*rhistvec'; 
+f = figure('Name','Manual Pole Placement With Observer Non-Zero ICs Actuator Effort')
+sgtitle('Manual Pole Placement With Observer Non-Zero ICs Actuator Effort')
+subplot(311), hold on
+plot(tvec_s,U_CL1(1,:))
+plot(tvec_s,umax_mps2*ones(size(tvec_s)),'--k');
+plot(tvec_s,-umax_mps2*ones(size(tvec_s)),'--k');
+ylabel('X Control Effort (m/s^2)')
+legend('Effort', 'Bounds');
+subplot(312), hold on
+plot(tvec_s,U_CL1(2,:))
+plot(tvec_s,umax_mps2*ones(size(tvec_s)),'--k');
+plot(tvec_s,-umax_mps2*ones(size(tvec_s)),'--k');
+ylabel('Y Control Effort (m/s^2)')
+legend('Effort', 'Bounds');
+subplot(313), hold on
+plot(tvec_s,U_CL1(3,:))
+plot(tvec_s,umax_mps2*ones(size(tvec_s)),'--k');
+plot(tvec_s,-umax_mps2*ones(size(tvec_s)),'--k');
+ylabel('Z Control Effort (m/s^2)')
+xlabel('Time (s)');
+legend('Effort', 'Bounds');
+
+filename = 'actuator_with_ic';
+if saveFigs
+    saveas(f,filename);
+    exportgraphics(f,[filename, '.png']);
+end
 
 
+f = figure('Name','Manual Pole Placement With Observer Non-Zero ICs: Response Compared To Desired Position State')
+sgtitle('Manual Pole Placement With Observer Non-Xero ICs: Response Compared To Desired Position State');
+subplot(311)
+plot(tvec_s,ycl1(:,1),'DisplayName','Observed'); hold on;
+plot(tvec_s,rhistvec(:,1),'DisplayName','Reference');
+legend show
+ylabel('X (m)');
+subplot(312)
+plot(tvec_s,ycl1(:,2),'DisplayName','Observed'); hold on;
+plot(tvec_s,rhistvec(:,2),'DisplayName','Reference');
+legend show
+ylabel('Y (m)');
+subplot(313)
+plot(tvec_s,ycl1(:,3),'DisplayName','Observed'); hold on;
+plot(tvec_s,rhistvec(:,3),'DisplayName','Reference')
+ylabel('Z (m)');
+xlabel('Time (sec)');
+legend show
+
+filename = 'output_with_ic';
+if saveFigs
+    saveas(f,filename);
+    exportgraphics(f,[filename, '.png']);
+end
+
+
+idx = find(tvec_s>10,1);
+figure('Name','Manual Pole Placement With Observer 0 ICs: Observer Response')
+sgtitle('Manual Pole Placement With Observer 0 ICs: Observer Response');
+subplot(611)
+plot(tvec_s(1:idx),xcl1(1:idx,7),'DisplayName','Simulated'); hold on;
+plot(tvec_s(1:idx),rhistvec(1:idx,1),'DisplayName','Desired');
+ylabel('x error (m)');
+legend show
+subplot(612)
+plot(tvec_s(1:idx),xcl1(1:idx,8),'DisplayName','Simulated'); hold on;
+plot(tvec_s(1:idx),rhistvec(1:idx,2),'DisplayName','Desired');
+ylabel('y error (m)');
+legend show
+subplot(613)
+plot(tvec_s(1:idx),xcl1(1:idx,9),'DisplayName','Simulated'); hold on;
+plot(tvec_s(1:idx),rhistvec(1:idx,3),'DisplayName','Desired')
+ylabel('z error (m)');
+legend show
+subplot(614)
+plot(tvec_s(1:idx),xcl1(1:idx,10),'DisplayName','Simulated'); hold on;
+plot(tvec_s(1:idx),rhistvec(1:idx,3),'DisplayName','Desired')
+ylabel('xdot error (m)');
+legend show
+subplot(615)
+plot(tvec_s(1:idx),xcl1(1:idx,11),'DisplayName','Simulated'); hold on;
+plot(tvec_s(1:idx),rhistvec(1:idx,3),'DisplayName','Desired')
+ylabel('ydot error (m)');
+legend show
+subplot(616)
+plot(tvec_s(1:idx),xcl1(1:idx,12),'DisplayName','Simulated'); hold on;
+plot(tvec_s(1:idx),rhistvec(1:idx,3),'DisplayName','Desired')
+ylabel('zdot error (m)');
+xlabel('Time (sec)');
+legend show
+
+filename = 'observer_with_ic';
+if saveFigs
+    saveas(f,filename);
+    exportgraphics(f,[filename, '.png']);
+end
 %% # 6 Infinite Horizon Controller
 
 umax_mps2 = thrust_kgmps2/massChaser_kg;
